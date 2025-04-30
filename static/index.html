@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Chat WebSocket Mejorado</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f3f4f6;
+            margin: 0;
+            padding: 20px;
+        }
+        #chat {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            height: 350px;
+            overflow-y: auto;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .msg {
+            margin: 8px 0;
+            padding: 10px;
+            background: #e0f7fa;
+            border-radius: 5px;
+            max-width: 80%;
+        }
+        .system-msg {
+            color: #555;
+            font-style: italic;
+            margin-bottom: 10px;
+        }
+        #controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        input {
+            padding: 10px;
+            font-size: 16px;
+            flex: 1;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background: #38bdf8;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0ea5e9;
+        }
+    </style>
+</head>
+<body>
+    <h2>💬 Chat con WebSocket y diseño mejorado</h2>
+    <div class="system-msg" id="system"></div>
+    <div id="chat"></div>
+    <div id="controls">
+        <input id="username" placeholder="Tu nombre" />
+        <input id="message" placeholder="Escribe tu mensaje" />
+        <button onclick="sendMessage()">Enviar</button>
+    </div>
+
+    <script>
+        const chat = document.getElementById("chat");
+        const usernameInput = document.getElementById("username");
+        const systemMsg = document.getElementById("system");
+        let userIP = "desconocida";
+
+        // Obtener IP pública
+        fetch("https://api.ipify.org?format=json")
+            .then(res => res.json())
+            .then(data => {
+                userIP = data.ip;
+                systemMsg.innerText = `Tu IP es ${userIP}. Ingresa tu nombre y chatea.`;
+            });
+
+        const ws = new WebSocket(`wss://${location.host}/ws`);
+
+        ws.onmessage = (event) => {
+            const msg = document.createElement("div");
+            msg.className = "msg";
+            msg.textContent = event.data;
+            chat.appendChild(msg);
+            chat.scrollTop = chat.scrollHeight;
+        };
+
+        function sendMessage() {
+            const user = usernameInput.value || "Anónimo";
+            const message = document.getElementById("message").value;
+            if (message.trim()) {
+                const fullMessage = `${user} (${userIP}): ${message}`;
+                ws.send(fullMessage);
+                document.getElementById("message").value = "";
+            }
+        }
+    </script>
+</body>
+</html>
